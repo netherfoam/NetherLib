@@ -1,10 +1,8 @@
 package io;
 
-import java.io.Closeable;
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Scanner;
 
 /**
  * A scanner which ignores all lines that contain standard java comments.
@@ -13,20 +11,31 @@ import java.util.Scanner;
  * also stripped from the input, so that only lines with uncommented
  * text are returned. 
  * */
-public class CommentScanner implements Closeable{
-	//The current state, are we in a comment block? true for yes.
-	private boolean commented;
-	//The buffer, we use this to detect next lines.
-	private String next;
-	//The internal scanner we read from.
-	private Scanner sc;
+public class CommentScanner{
+	//The source to read from
+	private char[] buffer;
+	private int mark = 0;
+	private int index = 0;
+	
+	private static final String[] COMMENTS_LINE = {"#", "//"};
+	private static final String[] COMMENTS_BLOCK_START = {"/*"};
+	private static final String[] COMMENTS_BLOCK_END = {"*/"};
 	
 	/**
 	 * Creates a new CommentScanner object.
 	 * @param f The file to read from
+	 * @throws IOException 
 	 */
-	public CommentScanner(File f) throws FileNotFoundException{
-		this.sc = new Scanner(f);
+	public CommentScanner(File f) throws IOException{
+		FileInputStream in = new FileInputStream(f);
+		this.buffer = new char[in.available()];
+		
+		int b;
+		while((b = in.read()) >= 0){
+			this.buffer[index++] = (char) b;
+		}
+		index = 0;
+		in.close();
 	}
 	
 	/**
@@ -34,20 +43,16 @@ public class CommentScanner implements Closeable{
 	 * @return true if we have available input, false otherwise.
 	 */
 	public boolean hasNextLine(){
-		if(next != null){
+		mark = index;
+		
+		try{
+			readLine();
+			index = mark;
 			return true;
 		}
-		else if(sc.hasNextLine()){
-			try{
-				next = readLine();
-			}
-			catch(IndexOutOfBoundsException e){
-				return false; //No more data.
-			}
-			
-			return true;
+		catch(Exception e){
+			return false;
 		}
-		return false; //Nothing in buffer, nothing in scanner. End of file.
 	}
 	
 	/**
@@ -56,67 +61,61 @@ public class CommentScanner implements Closeable{
 	 * @throws IndexOutOfBoundsException if we have no more input available
 	 */
 	public String readLine(){
-		if(next != null){ //We have one in the buffer
-			String s = next;
-			next = null; //We're using this input up.
-			s = parse(s);
-			if(s.isEmpty() == false) return s;
-		}
-		
-		while(sc.hasNextLine()){ //Wait for some valid input
-			String s = sc.nextLine();
-			s = parse(s);
-			if(s.isEmpty() == false) return s;
-		}
-		
-		//Nothing in the buffer, nothing in the scanner
-		throw new IndexOutOfBoundsException("No more file input.");
-	}
-	
-	private String parse(String s){
-		if(commented){
-			//We are in a comment block.
-			int end = s.indexOf("*/");
-			if(end < 0) return ""; //Line is commented out.
-			else{
-				s = s.substring(end + 2, s.length());
-				commented = false;
-				return parse(s); //We've removed that comment.
-			}
-		}
-		else{
-			int index1 = s.indexOf("//");
-			int index2 = s.indexOf("/*");
-			
-			if(index1 >= 0 && index2 >= 0){
-				if(index1 > index2){
-					index1 = -1;
+		StringBuilder sb = new StringBuilder();
+		try{
+			while(true){
+				sb.append(readRawLine());
+				//We've hit the new line.
+				//Now we strip comments.
+				
+				int index;
+				for(String t : COMMENTS_LINE){
+					index = sb.indexOf(t);
+					if(index >= 0){
+						return sb.substring(0, index) + System.getProperty("line.separator");
+					}
 				}
-				else{
-					index2 = -1;
+				
+				
+				for(int i = 0; i < COMMENTS_BLOCK_START.length; i++){
+					index = sb.indexOf(COMMENTS_BLOCK_START[i]);
+					if(index >= 0){
+						int end;
+						while((end = sb.indexOf(COMMENTS_BLOCK_END[i])) < 0){
+							sb.append(readRawLine());
+						}
+						
+						sb.replace(index, end + COMMENTS_BLOCK_END[i].length(), "");
+					}
 				}
+				
+				return sb.toString();
 			}
-			
-			if(index1 >= 0){
-				return s.substring(0, index1); //Read the whole line up until the //.
-			}
-			else if(index2 >= 0){
-				commented = true;
-				s = s.substring(0, index2) + parse(s.substring(index2 + 2, s.length()));
-				return s;
-			}
-			else{
-				return s; //No comment here.
-			}
+		}
+		catch(Exception e){
+			throw new IndexOutOfBoundsException(e.getMessage());
 		}
 	}
 	
 	/**
-	 * Closes the underlying scanner/file input stream.
+	 * Reads a raw line, excluding the \n character
 	 */
-	@Override
-	public void close() throws IOException {
-		sc.close();
+	private StringBuilder readRawLine() throws IndexOutOfBoundsException{
+		try{
+			StringBuilder sb = new StringBuilder();
+			char c;
+			while(true){
+				//c = (char) buffer.readByte();
+				c = buffer[index++];
+				sb.append(c);
+				
+				if(c == '\n' || index >= buffer.length){
+					return sb;
+				}
+			}
+		}
+		catch(IndexOutOfBoundsException e){
+			throw e;
+		}
 	}
-	
 }
