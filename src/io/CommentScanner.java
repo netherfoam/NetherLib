@@ -76,7 +76,6 @@ public class CommentScanner{
 					}
 				}
 				
-				
 				for(int i = 0; i < COMMENTS_BLOCK_START.length; i++){
 					index = sb.indexOf(COMMENTS_BLOCK_START[i]);
 					if(index >= 0){
