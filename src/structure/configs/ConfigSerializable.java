@@ -1,4 +1,4 @@
-package structure.config;
+package structure.configs;
 
 
 public interface ConfigSerializable{

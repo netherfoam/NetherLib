@@ -1,11 +1,10 @@
-package org.maxgamer.maxbans.util;
+package io;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-
 
 public class InputStreamWrapper extends InputStream{
 	/** The character set used for transmitting messages. Should have 1;1 with byte[] to String. */
@@ -14,7 +13,8 @@ public class InputStreamWrapper extends InputStream{
 	private InputStream i;
 	/** The number of bytes read */
 	private int read = 0;
-	boolean block = false;
+	/** After this number of milliseconds has passed with no data, we should stop blocking and return */
+	private long timeout = 0;
 	/** True for little endian, false for big endian */
 	private boolean littleEndian;
 	/**
@@ -98,11 +98,23 @@ public class InputStreamWrapper extends InputStream{
 		this.littleEndian = little;
 	}
 	
-	public boolean isBlocking(){
-		return block;
+	/**
+	 * Returns the number of milliseconds this wrapper will block, at most, before
+	 * giving up and returning -1 when reading a byte (or, if implemented, throwing
+	 * an exception).
+	 * @return The maximum wait time between reading bytes.
+	 */
+	public long getTimeout(){
+		return timeout;
 	}
-	public void setBlocking(boolean block){
-		this.block = block;
+	/**
+	 * Sets the number of milliseconds this wrapper will block, at most, before
+	 * giving up and returning -1 when reading a byte (or, if implemented, throwing
+	 * an exception).
+	 * @param time The maximum wait time between reading bytes.
+	 */
+	public void setTimeout(long time){
+		this.timeout = time;
 	}
 	
 	/**
@@ -286,12 +298,19 @@ public class InputStreamWrapper extends InputStream{
 	 */
 	@Override
 	public synchronized int read() throws IOException{
-		int n = i.read();
+		long start = System.currentTimeMillis();
+		
+		int n;
+		while((n = i.read()) < 0 && start + this.timeout > System.currentTimeMillis()){
+			try {
+				Thread.sleep(0, 500000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
 		if(n >= 0){
 			read++;
-		}
-		else{
-			throw new IOException("End of stream.");
 		}
 		return n;
 	}

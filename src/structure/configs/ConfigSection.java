@@ -1,4 +1,4 @@
-package structure.config;
+package structure.configs;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;

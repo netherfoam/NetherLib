@@ -1,4 +1,4 @@
-package structure.config;
+package structure.configs;
 
 import java.io.File;
 import java.io.FileInputStream;

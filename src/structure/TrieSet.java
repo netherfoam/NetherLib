@@ -1,4 +1,4 @@
-package org.maxgamer.maxbans.util;
+package structure;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -8,13 +8,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 
-
 public class TrieSet{
 	private TrieNode top = new TrieNode();
 	
-	public TrieSet(){
-		
-	}
+	public TrieSet(){}
 	
 	/**
 	 * Returns the node at a given key
