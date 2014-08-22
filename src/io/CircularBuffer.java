@@ -5,17 +5,41 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public class CircularBuffer implements ByteReader, ByteWriter{
+	public static void main(String[] args) throws IOException{
+		byte[] data = new byte[]{1,2,3,4};
+		CircularBuffer cb = new CircularBuffer(data.length);
+		
+		for(byte b : data){
+			cb.writeByte(b);
+		}
+		
+		System.out.println("Read: " + cb.readByte());
+		cb.mark(); System.out.println("Marked");
+		System.out.println("Read: " + cb.readByte());
+		System.out.println("Read: " + cb.readByte());
+		cb.reset(); System.out.println("Reset");
+		System.out.println("Read: " + cb.readByte());
+		System.out.println("Read: " + cb.readByte());
+		System.out.println("Read: " + cb.readByte());
+		cb.mark(); System.out.println("Marked");
+		
+		
+	}
+	
 	/** The buffer data */
 	protected byte[] data;
 	
-	/** the index to write at next */
+	/** the index to write at next. When this equals readpos, we have no data available */
 	protected int writepos = 0;
 	
-	/** The index of the last read byte */
+	/** The index of the next byte read.  When this equals readpos, we have no data available */
 	protected int readpos = 0;
 	
 	/** The position that was marked, we cannot advance past this. */
 	protected int mark = 0;
+	
+	/** Size since last mark */
+	protected int size = 0;
 	
 	/**
 	 * Constructs a circular buffer of the given size.
@@ -37,7 +61,7 @@ public class CircularBuffer implements ByteReader, ByteWriter{
 	 * @throws IOException 
 	 */
 	public void writeByte(byte b) throws IOException {
-		if(mark == (writepos + 1) % data.length){
+		if((writepos + 1) % data.length == mark){
 			throw new IOException("No space available");
 		}
 		
@@ -45,6 +69,7 @@ public class CircularBuffer implements ByteReader, ByteWriter{
 		if(writepos >= data.length){
 			writepos = 0;
 		}
+		size++;
 	}
 	
 	/**
@@ -120,6 +145,7 @@ public class CircularBuffer implements ByteReader, ByteWriter{
 	
 	public void mark(){
 		this.mark = this.readpos;
+		this.size = available();
 	}
 	
 	public void reset(){
@@ -128,18 +154,8 @@ public class CircularBuffer implements ByteReader, ByteWriter{
 
 	@Override
 	public void write(byte[] src, int start, int end) throws IOException {
-		int initPos = this.writepos;
-		
 		while(start < end){
-			if(mark == (writepos + 1) % data.length){
-				this.writepos = initPos; //Initial position
-				throw new IOException("No space available");
-			}
-			
-			this.data[this.writepos++] = src[start++];
-			if(writepos >= data.length){
-				writepos = 0;
-			}
+			this.writeByte(src[start++]);
 		}
 	}
 
@@ -150,19 +166,8 @@ public class CircularBuffer implements ByteReader, ByteWriter{
 
 	@Override
 	public void read(byte[] dest, int start, int end) throws IOException {
-		int initPos = this.readpos;
-		
 		while(start < end){
-			if(readpos == writepos){
-				this.readpos = initPos;
-				throw new IOException("The buffer is empty!");
-			}
-			
-			dest[start++] = data[readpos++];
-			
-			if(readpos >= data.length){
-				readpos = 0;
-			}
+			dest[start++] = readByte();
 		}
 	}
 
