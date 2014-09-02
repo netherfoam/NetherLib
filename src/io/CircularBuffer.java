@@ -1,13 +1,13 @@
 package io;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 
 public class CircularBuffer implements ByteReader, ByteWriter{
-	public static void main(String[] args) throws IOException{
+	public static void main(String[] args) {
 		byte[] data = new byte[]{1,2,3,4};
-		CircularBuffer cb = new CircularBuffer(data.length);
+		CircularBuffer cb = new CircularBuffer(data.length - 1);
 		
 		for(byte b : data){
 			cb.writeByte(b);
@@ -23,7 +23,33 @@ public class CircularBuffer implements ByteReader, ByteWriter{
 		System.out.println("Read: " + cb.readByte());
 		cb.mark(); System.out.println("Marked");
 		
+		for(byte b : new byte[]{5,6,7,8}){
+			cb.writeByte(b);
+		}
 		
+		System.out.println("Read: " + cb.readByte());
+		cb.mark(); System.out.println("Marked");
+		System.out.println("Read: " + cb.readByte());
+		System.out.println("Read: " + cb.readByte());
+		cb.reset(); System.out.println("Reset");
+		System.out.println("Read: " + cb.readByte());
+		System.out.println("Read: " + cb.readByte());
+		System.out.println("Read: " + cb.readByte());
+		cb.mark(); System.out.println("Marked");
+		
+		for(byte b : new byte[]{9,10,11,12}){
+			cb.writeByte(b);
+		}
+		
+		System.out.println("Read: " + cb.readByte());
+		cb.mark(); System.out.println("Marked");
+		System.out.println("Read: " + cb.readByte());
+		System.out.println("Read: " + cb.readByte());
+		cb.reset(); System.out.println("Reset");
+		System.out.println("Read: " + cb.readByte());
+		System.out.println("Read: " + cb.readByte());
+		System.out.println("Read: " + cb.readByte());
+		cb.mark(); System.out.println("Marked");
 	}
 	
 	/** The buffer data */
@@ -58,11 +84,12 @@ public class CircularBuffer implements ByteReader, ByteWriter{
 	/**
 	 * Writes the given byte, resizing if necessary
 	 * @param b the byte to write
-	 * @throws IOException 
+	 * @ 
 	 */
-	public void writeByte(byte b) throws IOException {
+	public void writeByte(byte b)  {
 		if((writepos + 1) % data.length == mark){
-			throw new IOException("No space available");
+			//throw new IndexOutOfBoundsException("No space available");
+			resize((this.data.length - 1) * 2);
 		}
 		
 		data[writepos++] = b;
@@ -72,14 +99,35 @@ public class CircularBuffer implements ByteReader, ByteWriter{
 		size++;
 	}
 	
+	private void resize(int newSize){
+		int available = this.available();
+		if(newSize < available) throw new IllegalArgumentException("Cannot fit " + available() + " bytes into a " + newSize + " array!");
+		
+		byte[] newData = new byte[newSize + 1]; //+1, see constructor.
+		this.reset(); //We want all of the data from our mark (inclusive) up to our writepos (exclusive)
+		
+		int write = this.available();
+		
+		this.read(newData, 0, write);
+		
+		this.mark = 0;
+		this.readpos = write - available;
+		this.writepos = write;
+		
+		System.out.println("Resized from " + (this.data.length - 1) + " to " + (newData.length - 1));
+		System.out.println("M: " + this.mark + ", R: " + this.readpos + ", W: " + this.writepos);
+		System.out.println("New Data: " + Arrays.toString(newData));
+		this.data = newData;
+	}
+	
 	/**
 	 * Reads a byte.
 	 * @return The byte read
-	 * @throws IOException if the buffer is empty
+	 * @ if the buffer is empty
 	 */
-	public byte readByte() throws IOException{
+	public byte readByte() {
 		if(readpos == writepos){
-			throw new IOException("The buffer is empty!");
+			throw new IndexOutOfBoundsException("The buffer is empty!");
 		}
 		
 		byte b = data[readpos++];
@@ -103,38 +151,38 @@ public class CircularBuffer implements ByteReader, ByteWriter{
 		}
 	}
 	
-	public void writeShort(short s) throws IOException{
+	public void writeShort(short s) {
 		writeByte((byte) (s >> 8));
 		writeByte((byte) s);
 	}
-	public void writeInt(int i) throws IOException{
+	public void writeInt(int i) {
 		writeShort((short) (i >> 16));
 		writeShort((short) i);
 	}
-	public void writeLong(long l) throws IOException{
+	public void writeLong(long l) {
 		writeInt((int) (l >> 16));
 		writeInt((int) l);
 	}
-	public void writeFloat(float f) throws IOException{
+	public void writeFloat(float f) {
 		writeInt(Float.floatToIntBits(f));
 	}
-	public void writeDouble(double d) throws IOException{
+	public void writeDouble(double d) {
 		writeLong(Double.doubleToRawLongBits(d));
 	}
 	
-	public short readShort() throws IOException{
+	public short readShort() {
 		return (short) (((readByte() & 0xFF) << 8) | (readByte() & 0xFF));
 	}
-	public int readInt() throws IOException{
+	public int readInt() {
 		return (((readShort() & 0xFFFF) << 16) | (readShort() & 0xFFFF));
 	}
-	public long readLong() throws IOException{
+	public long readLong() {
 		return (((readInt() & 0xFFFFFFFF) << 16) | (readInt() & 0xFFFFFFFF));
 	}
-	public float readFloat() throws IOException{
+	public float readFloat() {
 		return Float.intBitsToFloat(readInt());
 	}
-	public double readDouble() throws IOException{
+	public double readDouble() {
 		return Double.longBitsToDouble(readLong());
 	}
 
@@ -153,26 +201,26 @@ public class CircularBuffer implements ByteReader, ByteWriter{
 	}
 
 	@Override
-	public void write(byte[] src, int start, int end) throws IOException {
+	public void write(byte[] src, int start, int end)  {
 		while(start < end){
 			this.writeByte(src[start++]);
 		}
 	}
 
 	@Override
-	public void write(byte[] src) throws IOException {
+	public void write(byte[] src)  {
 		this.write(src, 0, src.length);
 	}
 
 	@Override
-	public void read(byte[] dest, int start, int end) throws IOException {
+	public void read(byte[] dest, int start, int end)  {
 		while(start < end){
 			dest[start++] = readByte();
 		}
 	}
 
 	@Override
-	public void read(byte[] dest) throws IOException {
+	public void read(byte[] dest)  {
 		read(dest, 0, dest.length);
 	}
 
@@ -180,7 +228,7 @@ public class CircularBuffer implements ByteReader, ByteWriter{
 	public OutputStream getOutputStream() {
 		return new OutputStream() {
 			@Override
-			public void write(int b) throws IOException {
+			public void write(int b)  {
 				CircularBuffer.this.writeByte((byte) b);
 			}
 		};
@@ -190,7 +238,7 @@ public class CircularBuffer implements ByteReader, ByteWriter{
 	public InputStream getInputStream() {
 		return new InputStream() {
 			@Override
-			public int read() throws IOException {
+			public int read()  {
 				return CircularBuffer.this.readByte() & 0xFF; //Must be 0-255
 			}
 		};
