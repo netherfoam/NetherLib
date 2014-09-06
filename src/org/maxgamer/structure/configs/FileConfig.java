@@ -55,7 +55,9 @@ public class FileConfig extends ConfigSection{
 			in.close();
 		}
 		catch(FileNotFoundException e){
-			file.getParentFile().mkdirs();
+			if(file.getParentFile() != null){
+				file.getParentFile().mkdirs();
+			}
 			file.createNewFile();
 		}
 		
