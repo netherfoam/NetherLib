@@ -1,4 +1,4 @@
-package io;
+package org.maxgamer.io;
 
 import java.io.IOException;
 import java.io.OutputStream;

@@ -1,4 +1,4 @@
-package event;
+package org.maxgamer.event;
 
 /**
  * Represents an action that may be cancelled once called.

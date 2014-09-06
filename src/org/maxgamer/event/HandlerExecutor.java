@@ -1,4 +1,4 @@
-package event;
+package org.maxgamer.event;
 
 import java.lang.reflect.Method;
 

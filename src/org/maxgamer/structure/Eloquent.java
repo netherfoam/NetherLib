@@ -1,4 +1,4 @@
-package structure;
+package org.maxgamer.structure;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -56,6 +56,8 @@ public class Eloquent{
 		for(i = 0; i < values.length; i++){
 			ps.setString(i + 1, String.valueOf(values[i]));
 		}
+		
+		//Log.debug(ps.toString());
 		ps.execute();
 	}
 	
@@ -90,6 +92,8 @@ public class Eloquent{
 		for(i = 0; i < values.length; i++){
 			ps.setString(i + 1, String.valueOf(values[i]));
 		}
+		
+		//Log.debug(ps.toString());
 		ps.execute();
 	}
 	
@@ -113,9 +117,11 @@ public class Eloquent{
 		
 		while(entry.hasNext()){
 			e = entry.next();
-			sb.append(", " + e.getKey() + " = ?");
 			keys[i] = e.getKey();
 			values[i++] = e.getValue();
+			
+			sb.append(", " + e.getKey() + " = ?");
+			
 		}
 		sb.append(" WHERE ");
 		
@@ -124,7 +130,16 @@ public class Eloquent{
 		sb.append(keys[i++] + " = ?");
 		
 		while(i < keys.length){
-			sb.append(" AND " + keys[i++] + " = ?");
+			//"Nothing compares to null!"
+			// - Not even null itself. This is a best of both worlds workaround.
+			if((oldFields.containsKey(keys[i]) && oldFields.get(keys[i]) == null) || (values[i] == null)){
+				sb.append(" AND (" + keys[i] + " IS NULL OR " + keys[i] + " = ?)");
+			}
+			else{
+				sb.append(" AND " + keys[i] + " = ?");
+			}
+			
+			i++;
 		}
 		
 		PreparedStatement ps = con.prepareStatement(sb.toString());
@@ -133,14 +148,15 @@ public class Eloquent{
 			
 			if(oldFields.containsKey(keys[i])){
 				//If we have an old field, use it, that's what is in the database currently
-				ps.setString((i + values.length + 1), String.valueOf(oldFields.get(keys[i])));
+				ps.setObject((i + values.length + 1), oldFields.get(keys[i]));
 			}
 			else{
 				//This field hasn't changed from what is in the database.
-				ps.setString((i + values.length + 1), String.valueOf(values[i]));
+				ps.setObject((i + values.length + 1), values[i]);
 			}
 		}
 		
+		//Log.debug(ps.toString());
 		ps.execute();
 		
 		oldFields.clear(); //We've updated the database.
@@ -298,6 +314,12 @@ public class Eloquent{
 		int cols = rs.getMetaData().getColumnCount();
 		for(int i = 1; i <= cols; i++){
 			String name = rs.getMetaData().getColumnName(i);
+			
+			if(rs.getObject(i) == null){
+				fields.put(name, null);
+				continue;
+			}
+			
 			switch(rs.getMetaData().getColumnType(i)){
 				case Types.ARRAY:
 				case Types.VARBINARY:

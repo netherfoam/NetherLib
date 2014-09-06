@@ -1,4 +1,4 @@
-package structure;
+package org.maxgamer.structure;
 
 import java.io.PrintStream;
 import java.util.ArrayList;

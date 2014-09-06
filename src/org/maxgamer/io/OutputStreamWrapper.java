@@ -1,4 +1,4 @@
-package io;
+package org.maxgamer.io;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -80,7 +80,7 @@ public class OutputStreamWrapper extends OutputStream{
 	 * @param b The byte to write
 	 * @throws IOException If the stream is closed.
 	 */
-	public synchronized void writeByte(byte b) throws IOException{
+	public synchronized void writeByte(int b) throws IOException{
 		this.write(b);
 	}
 	/**
@@ -88,7 +88,7 @@ public class OutputStreamWrapper extends OutputStream{
 	 * @param s The short to write.
 	 * @throws IOException If the stream is closed.
 	 */
-	public synchronized void writeShort(short s) throws IOException{
+	public synchronized void writeShort(int s) throws IOException{
 		if(littleEndian){
 			this.writeByte((byte) s);
 			this.writeByte((byte) (s >> 8));

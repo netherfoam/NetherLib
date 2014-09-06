@@ -1,4 +1,4 @@
-package io;
+package org.maxgamer.io;
 
 import java.io.File;
 import java.io.FileInputStream;

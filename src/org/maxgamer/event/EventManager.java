@@ -1,14 +1,35 @@
-package event;
+package org.maxgamer.event;
 
+import java.io.File;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.LinkedList;
+
+import org.maxgamer.io.ScriptLoader;
 
 public class EventManager {
 	private static HashMap<EventPriority, LinkedList<HandlerExecutor>> listeners;
 	
 	public static void reload(){
 		EventManager.listeners = new HashMap<EventPriority, LinkedList<HandlerExecutor>>(EventPriority.values().length);
+		
+		ScriptLoader<EventListener> listeners = new ScriptLoader<EventListener>(EventListener.class, new File("bin"));
+		listeners.reload();
+		for(Class<EventListener> clazz : listeners.getScripts()){
+			//We don't want interfaces or incomplete classes to be registered as commands.
+			if(clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) continue;
+			if(clazz.isAnnotationPresent(AutoRegister.class) == false) continue; //Don't autoregister.
+			
+			try{
+				EventListener listener = clazz.newInstance();
+				register(listener);
+			}
+			catch(Exception e){
+				System.out.println("Failed to register Generic Listener: " + clazz.getName());
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	/**
