@@ -19,7 +19,7 @@ import org.yaml.snakeyaml.Yaml;
  * @author netherfoam
  */
 public class FileConfig extends ConfigSection{
-	/** The file we write to */
+ 	/** The file we write to */
 	private File file;
 	/** 
 	 * The YML parser we use as an interface to write to the file

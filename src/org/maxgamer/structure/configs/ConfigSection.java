@@ -1,5 +1,6 @@
 package org.maxgamer.structure.configs;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -35,6 +36,19 @@ public class ConfigSection{
 	 */
 	public ConfigSection(){
 		this(new HashMap<String, Object>());
+	}
+	
+	/**
+	 * Creates a new ConfigSection, using the given InputStream
+	 * as a source.
+	 * @param in the input stream to read the config from.
+	 */
+	@SuppressWarnings("unchecked")
+	public ConfigSection(InputStream in){
+		DumperOptions options = new DumperOptions();
+		options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+		Yaml parser = new Yaml(options);
+		map = (Map<String, Object>) parser.load(in);
 	}
 	
 	/**

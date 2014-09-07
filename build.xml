@@ -1,0 +1,40 @@
+<project>
+	<property name="lib.dir" value="lib/"/>
+	<property name="bin.dir" value="bin/"/>
+    <property name="dist.dir" value="dist/"/>
+    
+	<path id="classpath">
+		<fileset dir="${lib.dir}" includes="*.jar"/>
+	</path>
+	
+    <target name="clean">
+        <delete dir="${bin.dir}"/>
+    </target>
+
+    <target name="compile">
+        <echo message="project.loc: ${project_loc}"/>
+        <mkdir dir="${bin.dir}"/>
+        <javac srcdir="src" destdir="${bin.dir}" classpathref="classpath" includeantruntime="false"/>
+		<copy todir="${bin.dir}">
+			<fileset dir="." includes="*.yml"/>
+            <fileset dir="." includes="*.db"/>
+		</copy>
+    </target>
+
+    <target name="jar" depends="compile">
+		<echo message="Outputting to ${dist.dir}${project_name}.jar"/>
+        <mkdir dir="${bin.dir}"/>
+        <mkdir dir="${dist.dir}"/>
+        <jar destfile="${dist.dir}${project_name}.jar" basedir="${bin.dir}">
+            <manifest>
+            </manifest>
+        </jar>
+    </target>
+    <target name="manifest" depends="compile">
+		<echo message="Outputting to ${dist.dir}${project_name}.jar"/>
+        <mkdir dir="${bin.dir}"/>
+        <mkdir dir="${dist.dir}"/>
+        <jar jarfile="${project_loc}\${dist.dir}${project_name}.jar" basedir="${bin.dir}" manifest="manifest.mf">
+        </jar>
+    </target>
+</project>
