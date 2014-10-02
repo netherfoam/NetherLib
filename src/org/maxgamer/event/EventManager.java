@@ -9,10 +9,10 @@ import java.util.LinkedList;
 import org.maxgamer.io.ScriptLoader;
 
 public class EventManager {
-	private static HashMap<EventPriority, LinkedList<HandlerExecutor>> listeners;
+	private HashMap<EventPriority, LinkedList<HandlerExecutor>> listeners;
 	
-	public static void reload(){
-		EventManager.listeners = new HashMap<EventPriority, LinkedList<HandlerExecutor>>(EventPriority.values().length);
+	public void reload(){
+		listeners = new HashMap<EventPriority, LinkedList<HandlerExecutor>>(EventPriority.values().length);
 		
 		ScriptLoader<EventListener> listeners = new ScriptLoader<EventListener>(EventListener.class, new File("bin"));
 		listeners.reload();
@@ -56,7 +56,7 @@ public class EventManager {
 	 * @param priority
 	 *            The priority to register it as. Parsing null will set priority to ActionPriority.NORMAL
 	 */
-	public static void register(EventListener listener) {
+	public void register(EventListener listener) {
 		if (listener == null) {
 			throw new NullPointerException("Listeners may not be null.");
 		}
@@ -87,7 +87,7 @@ public class EventManager {
 	 * @param listener The listener to fetch handlers from
 	 * @return A linked list (Never null, possibly empty) of handlers.
 	 */
-	private static LinkedList<HandlerExecutor> getHandlers(EventListener listener){
+	private LinkedList<HandlerExecutor> getHandlers(EventListener listener){
 		LinkedList<HandlerExecutor> actions = new LinkedList<HandlerExecutor>();
 		for(Method m : listener.getClass().getMethods()){
 			if(isHandler(m) == false) {
@@ -130,7 +130,7 @@ public class EventManager {
 	 *            The listener
 	 * @return True if it was removed, false if it could not be found.
 	 */
-	public static boolean unregister(EventListener listener) {
+	public boolean unregister(EventListener listener) {
 		LinkedList<HandlerExecutor> handlers = getHandlers(listener);
 		for(HandlerExecutor h : handlers){
 			LinkedList<HandlerExecutor> list = listeners.get(h.getPriority());
@@ -145,7 +145,7 @@ public class EventManager {
 	 * Broadcasts the specified action to all listeners
 	 * @param event The action to broadcast.
 	 */
-	public static void callEvent(Event event) {
+	public void callEvent(Event event) {
 		if (event == null) {
 			throw new NullPointerException("Event may not be null!");
 		}
@@ -176,7 +176,7 @@ public class EventManager {
 	 * a nicely formatted string.
 	 * @return The debug info
 	 */
-	public static String describe(){
+	public String describe(){
 		StringBuilder sb = new StringBuilder();
 		
 		for(EventPriority p : EventPriority.values()){

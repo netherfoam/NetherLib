@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.yaml.snakeyaml.DumperOptions;
@@ -23,7 +22,7 @@ import org.yaml.snakeyaml.Yaml;
  * with this project.
  * @author netherfoam
  */
-public class ConfigSection{
+public class ConfigSection implements Map<String, Object>{
 	/**
 	 * The map of <String, Object> contained in this section.
 	 * This is the key-values of the map. Note that the key
@@ -49,6 +48,8 @@ public class ConfigSection{
 		options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
 		Yaml parser = new Yaml(options);
 		map = (Map<String, Object>) parser.load(in);
+		
+		
 	}
 	
 	/**
@@ -115,6 +116,7 @@ public class ConfigSection{
 			//ConfigSection is a nice way of saying map.
 			o = ((ConfigSection) o).map;
 		}
+		
 		node.put(parts[parts.length - 1], o);
 	}
 	
@@ -309,7 +311,26 @@ public class ConfigSection{
 			}
 			last = (Map<String, Object>) q;
 		}
-		return last.get(parts[parts.length - 1]);
+		
+		Object o = last.get(parts[parts.length - 1]); 
+		
+		if(o instanceof Map){
+			/*
+			 * If we're retrieving a map, then we should check if we can cast
+			 * it to a config section. This is typesafe in that it prevents us
+			 * from using a map that does not have keys as strings.
+			 */
+			HashMap<String, Object> result = new HashMap<String, Object>();
+			for(Entry<?, ?> e : ((Map<?, ?>) o).entrySet()){
+				if(e.getKey() instanceof String == false) return o; //Key is not String, we can't help.
+				
+				result.put((String) e.getKey(), e.getValue());
+			}
+			
+			return new ConfigSection(result);
+		}
+		
+		return o;
 	}
 	
 	/**
@@ -460,5 +481,60 @@ public class ConfigSection{
 		options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
 		Yaml parser = new Yaml(options);
 		return parser.dump(map);
+	}
+
+	@Override
+	public int size() {
+		return map.size();
+	}
+
+	@Override
+	public boolean containsKey(Object key) {
+		return map.containsKey(key);
+	}
+
+	@Override
+	public boolean containsValue(Object value) {
+		return map.containsValue(value);
+	}
+
+	@Override
+	public Object get(Object key) {
+		return map.get(key);
+	}
+
+	@Override
+	public Object put(String key, Object value) {
+		return map.put(key, value);
+	}
+
+	@Override
+	public Object remove(Object key) {
+		return map.remove(key);
+	}
+
+	@Override
+	public void putAll(Map<? extends String, ? extends Object> m) {
+		map.putAll(m);
+	}
+
+	@Override
+	public void clear() {
+		map.clear();
+	}
+
+	@Override
+	public Set<String> keySet() {
+		return map.keySet();
+	}
+
+	@Override
+	public Collection<Object> values() {
+		return map.values();
+	}
+
+	@Override
+	public Set<Entry<String, Object>> entrySet() {
+		return map.entrySet();
 	}
 }

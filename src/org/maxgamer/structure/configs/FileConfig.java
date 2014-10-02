@@ -20,12 +20,12 @@ import org.yaml.snakeyaml.Yaml;
  */
 public class FileConfig extends ConfigSection{
  	/** The file we write to */
-	private File file;
+	private final File file;
 	/** 
 	 * The YML parser we use as an interface to write to the file
 	 * This uses the SnakeYAML library.  
 	 */
-	private Yaml parser;
+	private final Yaml parser;
 	
 	/**
 	 * Creates a new FileConfig based on the given file.
@@ -74,7 +74,7 @@ public class FileConfig extends ConfigSection{
 	 */
 	public void save() throws IOException{
 		if(!file.exists()){
-			file.getParentFile().mkdirs();
+			if(file.getParentFile() != null) file.getParentFile().mkdirs();
 			file.createNewFile();
 		}
 		PrintStream ps = new PrintStream(file);
