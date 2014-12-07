@@ -351,7 +351,7 @@ public class ConfigSection implements Map<String, Object>{
 	 */
 	public int getInt(String k, int fallback){
 		try{
-			return (int) getObject(k);
+			return ((Number) getObject(k)).intValue();
 		}
 		catch(Exception e){
 			return fallback;
@@ -376,7 +376,8 @@ public class ConfigSection implements Map<String, Object>{
 	 */
 	public long getLong(String k, long fallback){
 		try{
-			return (long) getObject(k);
+			Number n = (Number) getObject(k);
+			return n.longValue();
 		}
 		catch(Exception e){
 			return fallback;
@@ -401,17 +402,8 @@ public class ConfigSection implements Map<String, Object>{
 	 */
 	public double getDouble(String k, double fallback){
 		try{
-			Object o = getObject(k);
-			if(o instanceof Integer){
-				return (int) o;
-			}
-			else if(o instanceof Long){
-				return (long) o;
-			}
-			else if(o instanceof Double){
-				return (double) o;
-			}
-			return (double) o;
+			Number n = (Number) getObject(k);
+			return n.doubleValue();
 		}
 		catch(Exception e){
 			return fallback;
