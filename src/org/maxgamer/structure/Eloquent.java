@@ -156,7 +156,6 @@ public class Eloquent{
 			}
 		}
 		
-		//Log.debug(ps.toString());
 		ps.execute();
 		
 		oldFields.clear(); //We've updated the database.
@@ -368,11 +367,8 @@ public class Eloquent{
 				case Types.BIGINT:
 				case Types.TIME:
 				case Types.TIMESTAMP:
+				case Types.INTEGER: //SQLite reports integer type when a long is required.
 					fields.put(name, rs.getLong(i));
-					break;
-					
-				case Types.INTEGER:
-					fields.put(name,  rs.getInt(i));
 					break;
 					
 				case Types.SMALLINT:
