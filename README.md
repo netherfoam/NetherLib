@@ -3,6 +3,8 @@ NetherLib
 
 A collection of my personal Java libraries I've written, as convenience for other projects I write. They include event handling, some stream IO wrappers, a reflection class loader, a TrieSet for string completion, SQL data model and YML Configuration API for the SnakeYML.jar lib included in lib/
 
+Dependencies are all available in the lib/ folder.
+
 == Configs ==
 
 The configs in this repository make use of the SnakeYML configuration library, allowing a nicer API to be used for setting and retrieving primitive values from a configuration file. Values include all primitive types (boolean, int, long, float, double, byte, short), Strings, maps, lists and ConfigSections, which may represent more advanced objects which have a unique key (Such as a player's items, having a username as a key, and an item slot as a subkey). Example usage is somewhat like this:<pre>
